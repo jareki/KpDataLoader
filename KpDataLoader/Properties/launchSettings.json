@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "KpDataLoader": {
+      "commandName": "Project"
+    },
+    "Container (Dockerfile)": {
+      "commandName": "Docker"
+    }
+  }
+}
