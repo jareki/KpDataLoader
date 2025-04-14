@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-
-namespace KpDataLoader.Db
+﻿namespace KpDataLoader.Db
 {
     public interface IDbRepository<T> where T : class
     {
