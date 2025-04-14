@@ -24,11 +24,11 @@ namespace KpDataLoader.Api.Handlers
         {
             try
             {
-                string requestUri = BuildRequestUri(request);
-                HttpResponseMessage response = await _httpClientService.GetAsync(requestUri, cancellationToken);
+                string requestUri = this.BuildRequestUri(request);
+                HttpResponseMessage response = await this._httpClientService.GetAsync(requestUri, cancellationToken);
                 if (!response.IsSuccessStatusCode)
                 {
-                    return HandleError(response);
+                    return await this.HandleErrorAsync(response, cancellationToken);
                 }
 
                 // Десериализуем JSON в объект ответа
@@ -39,17 +39,17 @@ namespace KpDataLoader.Api.Handlers
             catch (HttpRequestException ex)
             {
                 // Обрабатываем ошибки сетевого соединения
-                return HandleError(ex);
+                return await this.HandleErrorAsync(ex, cancellationToken);
             }
             catch (JsonException ex)
             {
                 // Обрабатываем ошибки десериализации
-                return HandleError(ex);
+                return await this.HandleErrorAsync(ex, cancellationToken);
             }
             catch (Exception ex)
             {
                 // Обрабатываем другие исключения
-                return HandleError(ex);
+                return await this.HandleErrorAsync(ex, cancellationToken);
             }
         }
 
@@ -140,8 +140,8 @@ namespace KpDataLoader.Api.Handlers
         /// </summary>
         /// <param name="response">ответ</param>
         /// <returns></returns>
-        protected abstract TResponse HandleError(HttpResponseMessage response);
+        protected abstract ValueTask<TResponse> HandleErrorAsync(HttpResponseMessage response, CancellationToken ct = default);
 
-        protected abstract TResponse HandleError(Exception ex);
+        protected abstract ValueTask<TResponse> HandleErrorAsync(Exception ex, CancellationToken ct = default);
     }
 }
