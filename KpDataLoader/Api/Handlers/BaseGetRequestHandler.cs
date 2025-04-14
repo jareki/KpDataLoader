@@ -10,10 +10,14 @@ namespace KpDataLoader.Api.Handlers
         where TResponse : IResponseModel
     {
         private readonly IHttpClientService _httpClientService;
+        private readonly string _method;
 
-        protected BaseGetRequestHandler(IHttpClientService httpClientService)
+        protected BaseGetRequestHandler(
+            IHttpClientService httpClientService, 
+            string method)
         {
             this._httpClientService = httpClientService;
+            this._method = method;
         }
 
         public async Task<TResponse> HandleAsync(TRequest request, CancellationToken cancellationToken = default)
@@ -59,13 +63,82 @@ namespace KpDataLoader.Api.Handlers
         /// </summary>
         /// <param name="request">Объект запроса</param>
         /// <returns>URI запроса с параметрами</returns>
-        protected abstract string BuildRequestUri(TRequest request);
+        protected virtual string BuildRequestUri(TRequest request)
+        {
+            if (request == null)
+                return string.Empty;
+
+            var properties = request.GetType().GetProperties()
+                .Where(p => p.GetValue(request) != null)
+                .ToList();
+
+            var parameters = new Dictionary<string, string>();
+            var processedProperties = new HashSet<string>();
+
+            // Один проход по всем свойствам
+            foreach (var prop in properties)
+            {
+                string name = prop.Name;
+
+                // Пропускаем уже обработанные свойства
+                if (processedProperties.Contains(name))
+                    continue;
+                string baseName = String.Empty;
+                string minName = String.Empty;
+                string maxName = String.Empty;
+
+                if (name.StartsWith("min", StringComparison.OrdinalIgnoreCase)
+                    || name.StartsWith("max", StringComparison.OrdinalIgnoreCase))
+                {
+                    baseName = name.Substring(3);
+                    minName = "min" + baseName;
+                    maxName = "max" + baseName;
+                }
+
+                // Проверяем, является ли свойство частью min/max пары
+                if (!string.IsNullOrEmpty(baseName))
+                {
+                    var minProp = properties.FirstOrDefault(p =>
+                        string.Equals(p.Name, minName, StringComparison.OrdinalIgnoreCase));
+                    var maxProp = properties.FirstOrDefault(p =>
+                        string.Equals(p.Name, maxName, StringComparison.OrdinalIgnoreCase));
+
+                    if (maxProp != null)
+                    {
+                        var minValue = minProp?.GetValue(request)?.ToString();
+                        var maxValue = maxProp.GetValue(request)?.ToString();
+
+                        if (minValue != null && maxValue != null)
+                        {
+                            parameters[baseName] = $"{minValue}-{maxValue}";
+                            processedProperties.Add(minName);
+                            processedProperties.Add(maxName);
+                            continue;
+                        }
+                    }
+                }
+
+                // Обычное свойство
+                parameters[name] = prop.GetValue(request)?.ToString() ?? string.Empty;
+                processedProperties.Add(name);
+            }
+
+            // Строим строку запроса
+            var queryString =
+                this._method
+                + '?'
+                + string.Join(
+                    '&',
+                    parameters.Select(p =>
+                        $"{Uri.EscapeDataString(p.Key)}={Uri.EscapeDataString(p.Value)}"));
+
+            return queryString.ToString();
+        }
 
         /// <summary>
         /// Обработка ошибочных http-кодов ответа
         /// </summary>
         /// <param name="response">ответ</param>
-        /// <param name="jsonContent">json-контент ответа</param>
         /// <returns></returns>
         protected abstract TResponse HandleError(HttpResponseMessage response);
 

@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.Json;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using System.Text.Json;
 using KpDataLoader.Api.Http;
 using KpDataLoader.Api.Models.Repsonses;
 using KpDataLoader.Api.Models.Requests;
@@ -15,7 +9,9 @@ namespace KpDataLoader.Api.Handlers
     where TRequest : IRequestModel
     where TResponse : IResponseModel
     {
-        public JsonGetRequestHandler(IHttpClientService httpClientService) : base(httpClientService)
+        public JsonGetRequestHandler(
+            IHttpClientService httpClientService,
+            string method) : base(httpClientService, method)
         {
         }
 
