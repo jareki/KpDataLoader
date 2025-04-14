@@ -1,0 +1,17 @@
+{
+  "DbPath": "data/data.db",
+
+  "Api": {
+    "BaseAddress": "https://api.example.com",
+    "Key": "your_api_key_here",
+    "MaxRetries": 3,
+    "RetryDelaySec": 1,
+    "TimeoutSec": 30 
+  },
+
+  "Probabilities": {
+    "LoadMovie": 0.5,
+    "UpdateMovie": 0.1,
+    "UpdateImages": 0.4
+  }  
+}

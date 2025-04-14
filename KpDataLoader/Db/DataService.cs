@@ -13,7 +13,6 @@ namespace KpDataLoader.Db
         private const string MovieTypeTableName = "MovieTypes";
         private const string MovieImageTableName = "MovieImages";
 
-        private readonly string _databasePath;
         private readonly IDbRepository<Movie> _movieRepository;
         private readonly IDbRepository<Metadata> _metadataRepository;
         private readonly IDbRepository<MovieType> _movieTypeRepository;
@@ -25,8 +24,6 @@ namespace KpDataLoader.Db
         /// <param name="databasePath">Path to the SQLite database file</param>
         public DataService(string databasePath)
         {
-            this._databasePath = databasePath;
-
             this._movieRepository = new SqliteRepository<Movie>(databasePath, MovieTableName);
             this._metadataRepository = new SqliteRepository<Metadata>(databasePath, MetadataTableName);
             this._movieTypeRepository = new SqliteRepository<MovieType>(databasePath, MovieTypeTableName);

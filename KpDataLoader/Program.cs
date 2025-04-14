@@ -1,19 +1,29 @@
-﻿using KpDataLoader.Http;
+﻿using KpDataLoader.Db;
+using KpDataLoader.Http;
+using KpDataLoader.Settings;
+using KpDataLoader.Workers;
 using Microsoft.Extensions.DependencyInjection;
 
-var serviceProvider = new ServiceCollection()
+var services = new ServiceCollection();
+var settings = services.AddSettingsService(Path.Combine(AppContext.BaseDirectory, "data", "settings.json"));
+
+var serviceProvider =
+services
         .AddHttpClientService(options =>
     {
-        options.BaseAddress = "https://api.example.com";
-        options.ApiKey = "your-api-key";
-        options.Timeout = TimeSpan.FromSeconds(60);
-        options.MaxRetryAttempts = 3;
-        options.RetryInitialDelay = TimeSpan.FromSeconds(1);
+        options.BaseAddress = settings.Api.BaseAddress;
+        options.ApiKey = settings.Api.Key;
+        options.Timeout = TimeSpan.FromSeconds(settings.Api.TimeoutSec);
+        options.MaxRetryAttempts = settings.Api.MaxRetries;
+        options.RetryInitialDelay = TimeSpan.FromSeconds(settings.Api.RetryDelaySec);
     })
-    /* todo:
-     .AddProbabilityFactory<IWorker>(builder => {
-        builder.AddImplementation<EmailWorker>("Email", 0.2)
-           .AddImplementation<SmsWorker>("SMS", 0.3)
-           .AddImplementation<PushWorker>("Push", 0.5);
-    })*/
+     .AddProbabilityFactory<IWorker>(builder =>
+     {
+         builder
+             .AddImplementation<LoadRandomMovieWorker>(nameof(LoadRandomMovieWorker), settings.Probabilities.LoadMovie)
+             .AddImplementation<UpdateImagesWorker>(nameof(UpdateImagesWorker), settings.Probabilities.UpdateImages)
+             .AddImplementation<UpdateMovieWorker>(nameof(UpdateMovieWorker), settings.Probabilities.UpdateMovie);
+     })
+     .AddSingleton<DataService>(new DataService(settings.DbPath))
     .BuildServiceProvider();
+
