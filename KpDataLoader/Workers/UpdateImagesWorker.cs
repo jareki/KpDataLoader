@@ -2,7 +2,7 @@
 {
     public class UpdateImagesWorker : IWorker
     {
-        public Task<bool> RunAsync()
+        public Task<bool> RunAsync(CancellationToken ct = default)
         {
             throw new NotImplementedException();
         }

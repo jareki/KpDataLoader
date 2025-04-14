@@ -2,5 +2,5 @@
 
 public interface IWorker
 {
-    Task<bool> RunAsync();
+    Task<bool> RunAsync(CancellationToken ct = default);
 }
