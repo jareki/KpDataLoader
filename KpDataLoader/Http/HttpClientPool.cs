@@ -1,6 +1,6 @@
 ﻿using System.Collections.Concurrent;
 
-namespace KpDataLoader.Api.Http
+namespace KpDataLoader.Http
 {
     /// <summary>
     /// Singleton класс для управления пулом HttpClient экземпляров
@@ -16,7 +16,7 @@ namespace KpDataLoader.Api.Http
 
         public HttpClient GetOrCreateClient(string baseAddress, TimeSpan timeout)
         {
-            return this._clients.GetOrAdd(baseAddress, key =>
+            return _clients.GetOrAdd(baseAddress, key =>
             {
                 var client = new HttpClient
                 {
@@ -34,7 +34,7 @@ namespace KpDataLoader.Api.Http
 
         public void RemoveClient(string baseAddress)
         {
-            if (this._clients.TryRemove(baseAddress, out var client))
+            if (_clients.TryRemove(baseAddress, out var client))
             {
                 client.Dispose();
             }
@@ -42,12 +42,12 @@ namespace KpDataLoader.Api.Http
 
         public void Dispose()
         {
-            foreach (var client in this._clients.Values)
+            foreach (var client in _clients.Values)
             {
                 client.Dispose();
             }
 
-            this._clients.Clear();
+            _clients.Clear();
         }
     }
 }

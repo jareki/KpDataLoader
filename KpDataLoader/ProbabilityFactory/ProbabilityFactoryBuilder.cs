@@ -1,9 +1,4 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace KpDataLoader.ProbabilityFactory
 {
@@ -14,12 +9,12 @@ namespace KpDataLoader.ProbabilityFactory
     public class ProbabilityFactoryBuilder<T> where T : class
     {
         private readonly IServiceCollection _services;
-        internal readonly List<(string Name, double Probability, Type Type)> Implementations;
+        internal readonly List<ImplementProbabilityType> Implementations;
 
         public ProbabilityFactoryBuilder(IServiceCollection services)
         {
-            _services = services;
-            Implementations = new List<(string, double, Type)>();
+            this._services = services;
+            this.Implementations = new List<ImplementProbabilityType>();
         }
 
         /// <summary>
@@ -29,13 +24,20 @@ namespace KpDataLoader.ProbabilityFactory
             where TImplementation : class, T
         {
             // Регистрируем тип в DI
-            _services.AddTransient<TImplementation>();
+            this._services.AddTransient<TImplementation>();
 
             // Обеспечиваем резолвинг по конкретному типу
-            _services.AddTransient(typeof(TImplementation));
+            this._services.AddTransient(typeof(TImplementation));
 
             // Добавляем информацию о реализации
-            Implementations.Add((name, probability, typeof(TImplementation)));
+            this.Implementations.Add(
+                new ImplementProbabilityType()
+                    {
+                        Name = name,
+                        Probability = probability,
+                    Type = typeof(TImplementation),
+                    Treshold = 0
+                });
 
             return this;
         }
@@ -45,8 +47,8 @@ namespace KpDataLoader.ProbabilityFactory
         /// </summary>
         public bool ValidateProbabilitySum()
         {
-            double sum = Implementations.Sum(w => w.Probability);
-            return Math.Abs(sum - 1.0) < 0.000001;
+            double sum = this.Implementations.Sum(t => t.Probability);
+            return Math.Abs(sum - 1.0) < 0.0001;
         }
     }
 }

@@ -26,9 +26,9 @@ public static class ProbabilityFactoryServiceCollectionExtensions
             var factory = new ProbabilityFactory<T>(provider);
 
             // Добавляем все реализации из билдера
-            foreach (var (name, probability, type) in builder.Implementations)
+            foreach (var type in builder.Implementations)
             {
-                factory.Register(name, probability, type);
+                factory.Register(type.Name, type.Probability, type.Type);
             }
 
             return factory;

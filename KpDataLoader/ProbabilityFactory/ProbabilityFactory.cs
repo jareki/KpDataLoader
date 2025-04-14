@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using KpDataLoader.ProbabilityFactory;
 using Microsoft.Extensions.DependencyInjection;
 
 /// <summary>
@@ -11,15 +8,13 @@ using Microsoft.Extensions.DependencyInjection;
 public class ProbabilityFactory<T> where T : class
 {
     private readonly IServiceProvider _serviceProvider;
-    private readonly Dictionary<string, Type> _implementationTypes;
-    private readonly List<(string Name, double ProbabilityThreshold)> _probabilityRanges;
+    private readonly List<ImplementProbabilityType> _types;
     private readonly Random _random;
 
     public ProbabilityFactory(IServiceProvider serviceProvider)
     {
         this._serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
-        this._implementationTypes = new Dictionary<string, Type>();
-        this._probabilityRanges = new List<(string, double)>();
+        this._types = new List<ImplementProbabilityType>();
         this._random = new Random();
     }
 
@@ -30,12 +25,15 @@ public class ProbabilityFactory<T> where T : class
     /// <param name="probability">Вероятность выбора (от 0 до 1)</param>
     /// <param name="implementationType">Тип реализации T</param>
     /// <returns>Текущий экземпляр фабрики для цепочки вызовов</returns>
-    public ProbabilityFactory<T> Register(string name, double probability, Type implementationType)
+    public ProbabilityFactory<T> Register(
+        string name, 
+        double probability, 
+        Type implementationType)
     {
         if (string.IsNullOrEmpty(name))
             throw new ArgumentNullException(nameof(name));
 
-        if (probability < 0 || probability > 1)
+        if (probability is < 0 or > 1)
             throw new ArgumentOutOfRangeException(nameof(probability), "Вероятность должна быть между 0 и 1");
 
         if (implementationType == null)
@@ -44,11 +42,17 @@ public class ProbabilityFactory<T> where T : class
         if (!typeof(T).IsAssignableFrom(implementationType))
             throw new ArgumentException($"Тип {implementationType.Name} не наследуется от {typeof(T).Name}", nameof(implementationType));
 
-        if (this._implementationTypes.ContainsKey(name))
+        if (this._types.Any(t => t.Name.Equals(name, StringComparison.OrdinalIgnoreCase)))
             throw new ArgumentException($"Реализация с именем '{name}' уже зарегистрирована", nameof(name));
 
-        this._implementationTypes.Add(name, implementationType);
-        this._probabilityRanges.Clear(); // Сбрасываем кэш диапазонов вероятностей
+        this._types.Add(
+            new ImplementProbabilityType()
+            {
+                Name = name,
+                Type = implementationType,
+                Probability = probability,
+                Treshold = 0
+            });
 
         return this;
     }
@@ -82,51 +86,37 @@ public class ProbabilityFactory<T> where T : class
     /// <returns>Экземпляр T</returns>
     public T Create()
     {
-        if (this._implementationTypes.Count == 0)
+        if (this._types.Count == 0)
             throw new InvalidOperationException($"Не зарегистрировано ни одной реализации {typeof(T).Name}");
 
         this.EnsureProbabilityRangesCalculated();
 
         double randomValue = this._random.NextDouble();
 
-        foreach (var (name, threshold) in this._probabilityRanges)
+        foreach (var type in this._types)
         {
-            if (randomValue <= threshold)
+            if (randomValue <= type.Treshold)
             {
-                Type implementationType = this._implementationTypes[name];
+                Type implementationType = type.Type;
                 return (T)this._serviceProvider.GetRequiredService(implementationType);
             }
         }
 
         // Если из-за погрешностей вычислений мы не попали ни в один из диапазонов,
         // возвращаем последний вариант
-        var lastName = this._probabilityRanges.Last().Name;
-        Type lastImplementationType = this._implementationTypes[lastName];
+        var lastType = this._types.Last();
+        Type lastImplementationType = lastType.Type;
         return (T)this._serviceProvider.GetRequiredService(lastImplementationType);
     }
 
     /// <summary>
     /// Проверяет, что сумма вероятностей равна 1
     /// </summary>
-    public bool ValidateProbabilitySum()
+    private bool ValidateProbabilitySum()
     {
-        double sum = this._implementationTypes.Keys.Sum(name => this.GetProbabilityForImplementation(name));
+        double sum = this._types.Sum(t => t.Probability);
         // Используем допуск на погрешность вычислений
-        return Math.Abs(sum - 1.0) < 0.000001;
-    }
-
-    /// <summary>
-    /// Возвращает вероятность для указанной реализации
-    /// </summary>
-    /// <param name="name">Имя реализации</param>
-    /// <returns>Вероятность выбора</returns>
-    private double GetProbabilityForImplementation(string name)
-    {
-        int index = this._probabilityRanges.FindIndex(r => r.Name == name);
-        if (index == 0)
-            return this._probabilityRanges[0].ProbabilityThreshold;
-
-        return this._probabilityRanges[index].ProbabilityThreshold - this._probabilityRanges[index - 1].ProbabilityThreshold;
+        return Math.Abs(sum - 1.0) < 0.0001;
     }
 
     /// <summary>
@@ -134,34 +124,24 @@ public class ProbabilityFactory<T> where T : class
     /// </summary>
     private void EnsureProbabilityRangesCalculated()
     {
-        if (this._probabilityRanges.Count > 0)
+        if (this._types.Count == 0)
+        {
             return;
+        }
 
         double cumulativeProbability = 0;
-
-        // Собираем пары (имя, вероятность)
-        var implementationProbabilities = new Dictionary<string, double>();
-        foreach (var name in this._implementationTypes.Keys)
+        
+        int index = 0;
+        int count = this._types.Count;
+        foreach (var type in this._types)
         {
-            implementationProbabilities[name] = 0; // Инициализируем все нулями
-        }
+            cumulativeProbability += type.Probability;
+            if (index++ == count - 1)
+            {
+                cumulativeProbability = 1.0;
+            }
 
-        // Заполняем вероятности из зарегистрированных реализаций
-        foreach (var name in this._implementationTypes.Keys)
-        {
-            // Пока что берем равные вероятности, но потом будем заполнять правильно
-            implementationProbabilities[name] = 1.0 / this._implementationTypes.Count;
-        }
-
-        // Сортируем по возрастанию вероятности
-        var sortedImplementations = implementationProbabilities
-            .OrderBy(pair => pair.Value)
-            .ToList();
-
-        foreach (var pair in sortedImplementations)
-        {
-            cumulativeProbability += pair.Value;
-            this._probabilityRanges.Add((pair.Key, cumulativeProbability));
+            type.Treshold = cumulativeProbability;
         }
 
         // Проверяем сумму вероятностей
@@ -169,5 +149,3 @@ public class ProbabilityFactory<T> where T : class
             throw new InvalidOperationException("Сумма вероятностей не равна 1");
     }
 }
-
-// Расширения для регистрации в DI

@@ -1,4 +1,4 @@
-﻿namespace KpDataLoader.Api.Http
+﻿namespace KpDataLoader.Http
 {
     // Фабрика для создания HTTP-клиентов
     public class HttpClientServiceFactory

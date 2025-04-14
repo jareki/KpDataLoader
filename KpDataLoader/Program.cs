@@ -1,5 +1,4 @@
-﻿using KpDataLoader.Api.Http;
-using KpDataLoader.Workers;
+﻿using KpDataLoader.Http;
 using Microsoft.Extensions.DependencyInjection;
 
 var serviceProvider = new ServiceCollection()

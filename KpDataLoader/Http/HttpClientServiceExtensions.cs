@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
-namespace KpDataLoader.Api.Http
+namespace KpDataLoader.Http
 {
     // Расширения для IServiceCollection для регистрации в DI
     public static class HttpClientServiceExtensions

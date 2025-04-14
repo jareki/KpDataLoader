@@ -1,4 +1,4 @@
-﻿namespace KpDataLoader.Api.Http
+﻿namespace KpDataLoader.Http
 {
     public class HttpClientServiceOptions
     {
