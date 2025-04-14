@@ -1,4 +1,4 @@
-﻿namespace KpDataLoader.Db.Data;
+﻿namespace KpDataLoader.Db.Models;
 
 /// <summary>
 /// Represents a movie type

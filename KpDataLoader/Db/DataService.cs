@@ -1,4 +1,4 @@
-﻿using KpDataLoader.Db.Data;
+﻿using KpDataLoader.Db.Models;
 using KpDataLoader.Helpers;
 
 namespace KpDataLoader.Db
