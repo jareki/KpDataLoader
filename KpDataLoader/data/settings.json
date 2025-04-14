@@ -13,5 +13,18 @@
     "LoadMovie": 0.5,
     "UpdateMovie": 0.1,
     "UpdateImages": 0.4
-  }  
+  },
+
+  "Search": {
+    "MinYear": 2000,
+    "MaxYear": 2023,
+    "MinRatingKp": 0.0,
+    "MaxRatingKp": 10.0,
+    "MinRatingImdb": 0.0,
+    "MaxRatingImdb": 10.0,
+    "MinVotesKp": 0,
+    "MaxVotesKp": 1000000,
+    "MinVotesImdb": 0,
+    "MaxVotesImdb": 1000000
+  }
 }
