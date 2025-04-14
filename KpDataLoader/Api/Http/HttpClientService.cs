@@ -11,29 +11,29 @@ namespace KpDataLoader.Api.Http
 
         public HttpClientService(HttpClientServiceOptions options)
         {
-            _options = options ?? throw new ArgumentNullException(nameof(options));
-            _clientKey = string.IsNullOrEmpty(options.BaseAddress) ? Guid.NewGuid().ToString() : options.BaseAddress;
+            this._options = options ?? throw new ArgumentNullException(nameof(options));
+            this._clientKey = string.IsNullOrEmpty(options.BaseAddress) ? Guid.NewGuid().ToString() : options.BaseAddress;
 
             // Получаем HttpClient из пула или создаем новый
-            _httpClient = HttpClientPool.Instance.GetOrCreateClient(_clientKey, options.Timeout);
+            this._httpClient = HttpClientPool.Instance.GetOrCreateClient(this._clientKey, options.Timeout);
 
             // Добавляем API ключ в заголовки, если он указан
             if (!string.IsNullOrEmpty(options.ApiKey) &&
-                !_httpClient.DefaultRequestHeaders.Contains(options.ApiKeyHeaderName))
+                !this._httpClient.DefaultRequestHeaders.Contains(options.ApiKeyHeaderName))
             {
-                _httpClient.DefaultRequestHeaders.Add(options.ApiKeyHeaderName, options.ApiKey);
+                this._httpClient.DefaultRequestHeaders.Add(options.ApiKeyHeaderName, options.ApiKey);
             }
         }
 
         public async Task<HttpResponseMessage> GetAsync(string url, CancellationToken cancellationToken = default)
         {
-            return await SendWithRetryAsync(ct => _httpClient.GetAsync(url, ct), cancellationToken);
+            return await this.SendWithRetryAsync(ct => this._httpClient.GetAsync(url, ct), cancellationToken);
         }
 
         public async Task<HttpResponseMessage> PostAsync<T>(string url, T content, CancellationToken cancellationToken = default)
         {
-            var jsonContent = CreateJsonContent(content);
-            return await SendWithRetryAsync(ct => _httpClient.PostAsync(url, jsonContent, ct), cancellationToken);
+            var jsonContent = this.CreateJsonContent(content);
+            return await this.SendWithRetryAsync(ct => this._httpClient.PostAsync(url, jsonContent, ct), cancellationToken);
         }
         
         private StringContent CreateJsonContent<T>(T content)
@@ -48,14 +48,14 @@ namespace KpDataLoader.Api.Http
             CancellationToken cancellationToken)
         {
             int attempt = 0;
-            TimeSpan delay = _options.RetryInitialDelay;
+            TimeSpan delay = this._options.RetryInitialDelay;
 
             while (true)
             {
                 attempt++;
 
                 // Создаем таймаут для запроса
-                using var timeoutCts = new CancellationTokenSource(_options.Timeout);
+                using var timeoutCts = new CancellationTokenSource(this._options.Timeout);
                 using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(timeoutCts.Token, cancellationToken);
 
                 try
@@ -66,7 +66,7 @@ namespace KpDataLoader.Api.Http
                     // или это не ошибка сервера (не 5xx), возвращаем ответ
                     bool isServerError = (int)response.StatusCode >= 500 && (int)response.StatusCode <= 599;
                     if (response.IsSuccessStatusCode 
-                        || attempt >= _options.MaxRetryAttempts 
+                        || attempt >= this._options.MaxRetryAttempts 
                         || !isServerError)
                     {
                         return response;
@@ -80,9 +80,9 @@ namespace KpDataLoader.Api.Http
                 catch (TaskCanceledException) when (timeoutCts.Token.IsCancellationRequested)
                 {
                     // Произошел таймаут запроса
-                    if (attempt >= _options.MaxRetryAttempts)
+                    if (attempt >= this._options.MaxRetryAttempts)
                     {
-                        throw new TimeoutException($"Request timed out after {_options.Timeout.TotalSeconds} seconds and {attempt} attempts.");
+                        throw new TimeoutException($"Request timed out after {this._options.Timeout.TotalSeconds} seconds and {attempt} attempts.");
                     }
 
                     // Увеличиваем задержку и пробуем еще раз
@@ -92,7 +92,7 @@ namespace KpDataLoader.Api.Http
                 catch (HttpRequestException ex)
                 {
                     // При сетевых ошибках тоже повторяем
-                    if (attempt >= _options.MaxRetryAttempts)
+                    if (attempt >= this._options.MaxRetryAttempts)
                     {
                         throw new HttpRequestException($"Request failed after {attempt} attempts: {ex.Message}", ex);
                     }

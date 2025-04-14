@@ -75,6 +75,7 @@ namespace KpDataLoader.Db
         public async Task<int> AddMovieAsync(Movie movie)
         {
             movie.LastUpdate = DateTime.Now.ToString(DateHelper.SqliteFormat);
+            movie.LastImagesUpdate = DateTime.MinValue.ToString(DateHelper.SqliteFormat);
             var result = await this._movieRepository.InsertAsync(movie);
 
             await this.UpdateMovieCountAsync();
@@ -205,6 +206,16 @@ namespace KpDataLoader.Db
         public async Task<Movie> GetMovieByIdAsync(int id)
         {
             return await this._movieRepository.GetByIdAsync(id);
+        }
+
+        public async Task<Movie> GetOldestUpdatedMovie()
+        {
+            return (await this._movieRepository.GetWhereAsync("MovieId is not null order by LastUpdate desc limit 1")).FirstOrDefault();
+        }
+
+        public async Task<Movie> GetOldestImagesUpdatedMovie()
+        {
+            return (await this._movieRepository.GetWhereAsync("MovieId is not null order by LastImagesUpdate desc limit 1")).FirstOrDefault();
         }
 
         /// <summary>

@@ -1,4 +1,5 @@
 ﻿using KpDataLoader.Api.Http;
+using KpDataLoader.Workers;
 using Microsoft.Extensions.DependencyInjection;
 
 var serviceProvider = new ServiceCollection()
@@ -10,4 +11,10 @@ var serviceProvider = new ServiceCollection()
         options.MaxRetryAttempts = 3;
         options.RetryInitialDelay = TimeSpan.FromSeconds(1);
     })
+    /* todo:
+     .AddProbabilityFactory<IWorker>(builder => {
+        builder.AddImplementation<EmailWorker>("Email", 0.2)
+           .AddImplementation<SmsWorker>("SMS", 0.3)
+           .AddImplementation<PushWorker>("Push", 0.5);
+    })*/
     .BuildServiceProvider();

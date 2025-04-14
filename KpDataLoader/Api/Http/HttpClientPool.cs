@@ -16,7 +16,7 @@ namespace KpDataLoader.Api.Http
 
         public HttpClient GetOrCreateClient(string baseAddress, TimeSpan timeout)
         {
-            return _clients.GetOrAdd(baseAddress, key =>
+            return this._clients.GetOrAdd(baseAddress, key =>
             {
                 var client = new HttpClient
                 {
@@ -34,7 +34,7 @@ namespace KpDataLoader.Api.Http
 
         public void RemoveClient(string baseAddress)
         {
-            if (_clients.TryRemove(baseAddress, out var client))
+            if (this._clients.TryRemove(baseAddress, out var client))
             {
                 client.Dispose();
             }
@@ -42,11 +42,12 @@ namespace KpDataLoader.Api.Http
 
         public void Dispose()
         {
-            foreach (var client in _clients.Values)
+            foreach (var client in this._clients.Values)
             {
                 client.Dispose();
             }
-            _clients.Clear();
+
+            this._clients.Clear();
         }
     }
 }
