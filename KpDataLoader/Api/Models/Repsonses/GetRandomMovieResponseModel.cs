@@ -2,7 +2,7 @@
 
 namespace KpDataLoader.Api.Models.Repsonses
 {
-    public class GetRandomMovieResponseModel
+    public class GetRandomMovieResponseModel: BaseResponseModel
     {
         [JsonPropertyName("id")]
         public int Id { get; set; }

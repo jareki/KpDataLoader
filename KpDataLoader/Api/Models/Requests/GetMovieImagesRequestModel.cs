@@ -1,13 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.Json.Serialization;
-using System.Threading.Tasks;
+﻿using System.Text.Json.Serialization;
 
 namespace KpDataLoader.Api.Models.Requests
 {
-    public class GetMovieImagesRequestModel
+    public class GetMovieImagesRequestModel: IRequestModel
     {
         [JsonPropertyName("page")]
         public int Page { get; set; }

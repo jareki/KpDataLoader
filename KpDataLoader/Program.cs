@@ -1,4 +1,7 @@
-﻿using KpDataLoader.Db;
+﻿using KpDataLoader.Api.Handlers;
+using KpDataLoader.Api.Models.Repsonses;
+using KpDataLoader.Api.Models.Requests;
+using KpDataLoader.Db;
 using KpDataLoader.Http;
 using KpDataLoader.Settings;
 using KpDataLoader.Workers;
@@ -22,6 +25,7 @@ namespace KpDataLoader
 
                 var serviceProvider =
                     services
+                        .AddSingleton(new DataService(settings.DbPath))
                         .AddHttpClientService(options =>
                         {
                             options.BaseAddress = settings.Api.BaseAddress;
@@ -30,6 +34,8 @@ namespace KpDataLoader
                             options.MaxRetryAttempts = settings.Api.MaxRetries;
                             options.RetryInitialDelay = TimeSpan.FromSeconds(settings.Api.RetryDelaySec);
                         })
+                        .AddTransient<IRequestHandler<GetMovieImagesRequestModel, GetMovieImagesResponseModel>,GetMovieImagesRequestHandler>()
+                        .AddTransient<IRequestHandler<GetRandomMovieRequestModel, GetRandomMovieResponseModel>, GetRandomMovieRequestHandler>()
                         .AddProbabilityFactory<IWorker>(builder =>
                         {
                             builder
@@ -37,11 +43,8 @@ namespace KpDataLoader
                                 .AddImplementation<UpdateImagesWorker>(nameof(UpdateImagesWorker), settings.Probabilities.UpdateImages)
                                 .AddImplementation<UpdateMovieWorker>(nameof(UpdateMovieWorker), settings.Probabilities.UpdateMovie);
                         })
-                        .AddSingleton(new DataService(settings.DbPath))
                         .AddSingleton<MainWorker>()
                         .BuildServiceProvider();
-
-
 
                 var mainWorker = serviceProvider.GetRequiredService<MainWorker>();
                 await mainWorker.RunAsync(cts.Token);
