@@ -2,6 +2,7 @@
 {
     public class GetRandomMovieRequestModel : IRequestModel
     {
+        public int? Id { get; set; }
         public string Status { get; set; } = "completed";
         public int? MinYear { get; set; }
         public int? MaxYear { get; set; }

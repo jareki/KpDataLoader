@@ -72,7 +72,7 @@ namespace KpDataLoader.Api.Handlers
                 .Where(p => p.GetValue(request) != null)
                 .ToList();
 
-            var parameters = new Dictionary<string, string>();
+            var parameters = new Dictionary<string, string?>();
             var processedProperties = new HashSet<string>();
 
             // Один проход по всем свойствам
@@ -119,7 +119,7 @@ namespace KpDataLoader.Api.Handlers
                 }
 
                 // Обычное свойство
-                parameters[name] = prop.GetValue(request)?.ToString() ?? string.Empty;
+                parameters[name] = prop.GetValue(request)?.ToString();
                 processedProperties.Add(name);
             }
 
@@ -129,7 +129,7 @@ namespace KpDataLoader.Api.Handlers
                 + '?'
                 + string.Join(
                     '&',
-                    parameters.Select(p =>
+                    parameters.Where(p => p.Value != null).Select(p =>
                         $"{Uri.EscapeDataString(p.Key)}={Uri.EscapeDataString(p.Value)}"));
 
             return queryString.ToString();

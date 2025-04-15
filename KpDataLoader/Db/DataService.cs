@@ -196,13 +196,13 @@ namespace KpDataLoader.Db
         }
 
         /// <summary>
-        /// Gets a movie by its ID
+        /// Найти фильм по айди кинопоиска
         /// </summary>
-        /// <param name="id">The ID of the movie to retrieve</param>
+        /// <param name="id">айди фильма в кп</param>
         /// <returns>The movie if found, null otherwise</returns>
-        public async Task<Movie> GetMovieByIdAsync(int id)
+        public async Task<Movie?> GetMovieByIdAsync(int kpId)
         {
-            return await this._movieRepository.GetByIdAsync(id);
+            return (await this._movieRepository.GetWhereAsync("KpId = @KpId ", new { KpId = kpId }))?.FirstOrDefault();
         }
 
         public async Task<Movie> GetOldestUpdatedMovie()

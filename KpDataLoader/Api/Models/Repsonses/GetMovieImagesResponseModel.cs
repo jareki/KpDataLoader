@@ -5,7 +5,7 @@ namespace KpDataLoader.Api.Models.Repsonses
     public class GetMovieImagesResponseModel: BaseResponseModel
     {
         [JsonPropertyName("docs")]
-        public Doc Docs { get; set; }
+        public List<Doc> Docs { get; set; }
     }
 
     public class Doc
